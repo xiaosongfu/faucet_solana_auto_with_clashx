@@ -21,8 +21,7 @@ struct GetBalanceResult {
     pub value: u64,
 }
 
-pub async fn get_balance(address: &str) -> reqwest::Result<u64> {
-    let client = reqwest::Client::new();
+pub async fn get_balance(client: &reqwest::Client, address: &str) -> reqwest::Result<u64> {
     let balance = client
         .post("https://api.devnet.solana.com")
         .json(&json!(
@@ -40,8 +39,7 @@ pub async fn get_balance(address: &str) -> reqwest::Result<u64> {
     Ok(balance.result.value)
 }
 
-pub async fn request_airdrop(address: &str) -> reqwest::Result<()> {
-    let client = reqwest::Client::new();
+pub async fn request_airdrop(client: &reqwest::Client, address: &str) -> reqwest::Result<()> {
     let r = client
         .post("https://api.devnet.solana.com")
         .json(&json!(
@@ -51,7 +49,7 @@ pub async fn request_airdrop(address: &str) -> reqwest::Result<()> {
                 "method": "requestAirdrop",
                 "params": [
                     address,
-                    5000000000u64
+                    5_000_000_000u64
                 ]
             }
         ))
@@ -71,14 +69,22 @@ mod tests {
 
     #[tokio::test]
     async fn should_ok() {
-        let mut balance = get_balance("BfnPrCHwe5jGa87nriUTkFNUGZFPWHfE8s6eYgMeF8S5")
-            .await
+        let solana_api_client = reqwest::Client::builder()
+            .proxy(reqwest::Proxy::all("socks5://127.0.0.1:7890").unwrap())
+            .build()
             .unwrap();
+
+        let mut balance = get_balance(
+            &solana_api_client,
+            "BfnPrCHwe5jGa87nriUTkFNUGZFPWHfE8s6eYgMeF8S5",
+        )
+        .await
+        .unwrap();
         println!("{:?}", balance);
-        // request_airdrop("BfnPrCHwe5jGa87nriUTkFNUGZFPWHfE8s6eYgMeF8S5")
+        // request_airdrop(&solana_api_client, "BfnPrCHwe5jGa87nriUTkFNUGZFPWHfE8s6eYgMeF8S5")
         //     .await
         //     .unwrap();
-        // balance = get_balance("BfnPrCHwe5jGa87nriUTkFNUGZFPWHfE8s6eYgMeF8S5")
+        // balance = get_balance(&solana_api_client, "BfnPrCHwe5jGa87nriUTkFNUGZFPWHfE8s6eYgMeF8S5")
         //     .await
         //     .unwrap();
         // println!("{:?}", balance);

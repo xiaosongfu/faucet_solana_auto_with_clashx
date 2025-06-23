@@ -34,6 +34,16 @@ async fn main() {
         .await
         .expect("query group proxies");
 
+    let ipinfo_api_client = reqwest::Client::builder()
+        .proxy(reqwest::Proxy::all("socks5://127.0.0.1:7890").unwrap())
+        .build()
+        .unwrap();
+
+    let solana_api_client = reqwest::Client::builder()
+        .proxy(reqwest::Proxy::all("socks5://127.0.0.1:7890").unwrap())
+        .build()
+        .unwrap();
+
     let mut idx = 0;
     for proxy in proxies.all {
         if SKIP_PROXIES.contains(&proxy.as_str()) {
@@ -58,7 +68,7 @@ async fn main() {
         {
             tokio::time::sleep(tokio::time::Duration::from_secs(4)).await;
 
-            if let Ok(ip_info) = api::ip::ip_ifo().await {
+            if let Ok(ip_info) = api::ip::ip_ifo(&ipinfo_api_client).await {
                 println!("\t ipinfo: {:?}", ip_info);
 
                 if ip_info.country.eq("CN") {
@@ -67,7 +77,7 @@ async fn main() {
 
                 if !ip_set.contains(&ip_info.ip) {
                     let address = ADDRESSES[idx];
-                    let mut balance = api::solana::get_balance(address)
+                    let mut balance = api::solana::get_balance(&solana_api_client, address)
                         .await
                         .unwrap_or(0)
                         .to_string();
@@ -77,11 +87,12 @@ async fn main() {
                         &balance[..balance.len() - 9]
                     );
 
-                    let request_airdrop_result = api::solana::request_airdrop(address).await;
+                    let request_airdrop_result =
+                        api::solana::request_airdrop(&solana_api_client, address).await;
                     if request_airdrop_result.is_ok() {
                         tokio::time::sleep(tokio::time::Duration::from_secs(4)).await;
 
-                        balance = api::solana::get_balance(address)
+                        balance = api::solana::get_balance(&solana_api_client, address)
                             .await
                             .unwrap_or(0)
                             .to_string();

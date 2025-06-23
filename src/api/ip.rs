@@ -15,8 +15,10 @@ pub struct IpInfo {
     pub country: String,
 }
 
-pub async fn ip_ifo() -> reqwest::Result<IpInfo> {
-    reqwest::get("https://ipinfo.io/json")
+pub async fn ip_ifo(client: &reqwest::Client) -> reqwest::Result<IpInfo> {
+    client
+        .get("https://ipinfo.io/json")
+        .send()
         .await?
         .json::<IpInfo>()
         .await
@@ -28,7 +30,12 @@ mod tests {
 
     #[tokio::test]
     async fn should_ok() {
-        let ip_info = ip_ifo().await.unwrap();
+        let ipinfo_api_client = reqwest::Client::builder()
+            .proxy(reqwest::Proxy::all("socks5://127.0.0.1:7890").unwrap())
+            .build()
+            .unwrap();
+
+        let ip_info = ip_ifo(&ipinfo_api_client).await.unwrap();
         println!("IP: {}, Country: {}", ip_info.ip, ip_info.country);
     }
 }
