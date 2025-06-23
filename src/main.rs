@@ -2,11 +2,11 @@ use std::collections::HashSet;
 
 mod api;
 
-const ADDRESSES: [&str; 6] = [
-    // "BfnPrCHwe5jGa87nriUTkFNUGZFPWHfE8s6eYgMeF8S5",
-    // "3dJhG2cSw9Tqhu6y5jUXoMfwz2d1n6gNUXcB23QwiCop",
-    // "FTddWu4BM7523crdqEcSCBcfnCFqY8cNsiBuodsYVf2X",
-    // "7yX7j33jabR77AXVyk4q5TsGa5cHXM6wKS2uPVcAdLNK",
+const ADDRESSES: [&str; 10] = [
+    "BfnPrCHwe5jGa87nriUTkFNUGZFPWHfE8s6eYgMeF8S5",
+    "3dJhG2cSw9Tqhu6y5jUXoMfwz2d1n6gNUXcB23QwiCop",
+    "FTddWu4BM7523crdqEcSCBcfnCFqY8cNsiBuodsYVf2X",
+    "7yX7j33jabR77AXVyk4q5TsGa5cHXM6wKS2uPVcAdLNK",
     "2To2szMKhPh8CszDbNapDqkKRPq98p7M2dU5VzGRh6vw",
     "DRxLSKXrE2HHXxSbAiygzweko7RWSk8troMoogeFAEnh",
     "HKmharEBwiigKVVQAY4es1n4AWh2tUmZK73xP41aSEvW",
