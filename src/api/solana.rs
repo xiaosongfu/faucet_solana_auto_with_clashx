@@ -21,7 +21,12 @@ struct GetBalanceResult {
     pub value: u64,
 }
 
-pub async fn get_balance(client: &reqwest::Client, address: &str) -> reqwest::Result<u64> {
+pub async fn get_balance(address: &str) -> reqwest::Result<u64> {
+    // 不可以复用 Client !!
+    let client = reqwest::Client::builder()
+        .proxy(reqwest::Proxy::all(crate::api::LOCAL_SOCKS5_PROXY).unwrap())
+        .build()
+        .unwrap();
     let balance = client
         .post("https://api.devnet.solana.com")
         .json(&json!(
@@ -39,7 +44,12 @@ pub async fn get_balance(client: &reqwest::Client, address: &str) -> reqwest::Re
     Ok(balance.result.value)
 }
 
-pub async fn request_airdrop(client: &reqwest::Client, address: &str) -> reqwest::Result<()> {
+pub async fn request_airdrop(address: &str) -> reqwest::Result<()> {
+    // 不可以复用 Client !!
+    let client = reqwest::Client::builder()
+        .proxy(reqwest::Proxy::all(crate::api::LOCAL_SOCKS5_PROXY).unwrap())
+        .build()
+        .unwrap();
     let r = client
         .post("https://api.devnet.solana.com")
         .json(&json!(

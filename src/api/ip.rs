@@ -15,7 +15,12 @@ pub struct IpInfo {
     pub country: String,
 }
 
-pub async fn ip_ifo(client: &reqwest::Client) -> reqwest::Result<IpInfo> {
+pub async fn ip_ifo() -> reqwest::Result<IpInfo> {
+    // 不可以复用 Client !!
+    let client = reqwest::Client::builder()
+        .proxy(reqwest::Proxy::all(crate::api::LOCAL_SOCKS5_PROXY).unwrap())
+        .build()
+        .unwrap();
     client
         .get("https://ipinfo.io/json")
         .send()
@@ -30,12 +35,7 @@ mod tests {
 
     #[tokio::test]
     async fn should_ok() {
-        let ipinfo_api_client = reqwest::Client::builder()
-            .proxy(reqwest::Proxy::all("socks5://127.0.0.1:7890").unwrap())
-            .build()
-            .unwrap();
-
-        let ip_info = ip_ifo(&ipinfo_api_client).await.unwrap();
+        let ip_info = ip_ifo().await.unwrap();
         println!("IP: {}, Country: {}", ip_info.ip, ip_info.country);
     }
 }

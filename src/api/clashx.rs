@@ -31,8 +31,19 @@ pub struct GroupProxies {
     pub now: String,
 }
 
+pub async fn swithc_output_mode_to_global(client: &reqwest::Client) -> reqwest::Result<()> {
+    client
+        .patch(format!("{}/configs", HOST))
+        .json(&json!({
+            "mode": "Global"
+        }))
+        .header("Content-Type", "application/json")
+        .send()
+        .await?;
+    Ok(())
+}
+
 pub async fn group_proxies(client: &reqwest::Client, group: &str) -> reqwest::Result<GroupProxies> {
-    // let client = reqwest::Client::builder().no_proxy().build().unwrap();
     client
         .get(format!("{}/proxies/{}", HOST, group))
         .send()
@@ -46,7 +57,6 @@ pub async fn set_group_proxy(
     group: &str,
     proxy: &str,
 ) -> reqwest::Result<()> {
-    // let client = reqwest::Client::builder().no_proxy().build().unwrap();
     client
         .put(format!("{}/proxies/{}", HOST, group))
         .json(&json!({
