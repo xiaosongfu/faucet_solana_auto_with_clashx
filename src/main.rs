@@ -1,8 +1,10 @@
+#![feature(duration_constructors_lite)]
+
 use std::collections::HashSet;
 
 mod api;
 
-const ADDRESSES: [&str; 10] = [
+const ADDRESSES: [&str; 20] = [
     "BfnPrCHwe5jGa87nriUTkFNUGZFPWHfE8s6eYgMeF8S5",
     "3dJhG2cSw9Tqhu6y5jUXoMfwz2d1n6gNUXcB23QwiCop",
     "FTddWu4BM7523crdqEcSCBcfnCFqY8cNsiBuodsYVf2X",
@@ -13,6 +15,16 @@ const ADDRESSES: [&str; 10] = [
     "H32XrTD7xCgqbc1q5Nw5Rd33FgWGEsoFtKNSrWiSKHan",
     "4kSH34VmCE9ZJLxAzsa3D8Bgwj1K7xheyjGJ5WkEGkg8",
     "Ga7xRstg3QDMgvwscBKpNsffPeFUMUGjECL5xn9XW37z",
+    "6fHocfDLvNWqypb4ALddC1Hk1753auYHKxi29dnQZJP9",
+    "5h8FSS7aQriPgB4gR5ABnze9niM7LamhnwoMRXYjapuE",
+    "4e1beoUeJGEbevcDZJ9wjiTc3aXoftte8YkrG4UAyjFV",
+    "Hn4tkCcEUT2hVzYcgW1Xw8rdiSKzoCS9w6hoUjguugZV",
+    "BXf3XN8B4Az7m3saGoJx42HuHTSRvuSd551jW322HFfk",
+    "ASFd5j4uR8zoHLuWD4HbcPiFtfF9jZkA4PJf77beEWcF",
+    "7biLjQc1tDUotGvuzgAVc554wq6ZUwF1AiGLbadgaUX6",
+    "EsNsB4PhyNSfE9B6FVMfwzkSCWCcsPRzQw8LS5odVhEB",
+    "47Yx8QwGFpCmF8vZiNzrg7tpQ5mbQJ6wBFnQdJQNcxWe",
+    "EmdoBAvJhcFc2UgKo2rTQUkxbb7Sj5NZYR9g3Lwz7E2j",
 ];
 
 const SKIP_PROXIES: [&str; 7] = [
@@ -25,8 +37,7 @@ const SKIP_PROXIES: [&str; 7] = [
     "故障转移",
 ];
 
-#[tokio::main]
-async fn main() {
+async fn logic() {
     let mut ip_set = HashSet::new();
 
     let clashx_api_client = reqwest::Client::builder().no_proxy().build().unwrap();
@@ -112,4 +123,14 @@ async fn main() {
             }
         }
     }
+}
+
+#[tokio::main]
+async fn main() {
+    logic().await;
+
+    // loop {
+    //     logic().await;
+    //     tokio::time::sleep(tokio::time::Duration::from_hours(5)).await;
+    // }
 }
