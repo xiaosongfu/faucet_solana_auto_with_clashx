@@ -80,37 +80,21 @@ async fn logic() {
 
                 if !ip_set.contains(&ip_info.ip) {
                     let address = ADDRESSES[idx];
-                    let mut balance = api::solana::get_balance(address)
-                        .await
-                        .unwrap_or(0)
-                        .to_string();
+                    let balance = api::solana::get_balance(address).await.unwrap_or(0);
                     println!(
-                        "\t [{}] before balance: {:?}",
+                        "\t [{}/{}] Balance: {:?}",
+                        idx,
                         address,
-                        &balance[..balance.len() - 9]
+                        balance as f64 / 1_000_000_000.0
                     );
 
                     let request_airdrop_result = api::solana::request_airdrop(address).await;
-                    if request_airdrop_result.is_ok() {
-                        tokio::time::sleep(tokio::time::Duration::from_secs(4)).await;
-
-                        balance = api::solana::get_balance(address)
-                            .await
-                            .unwrap_or(0)
-                            .to_string();
-                        println!(
-                            "\t ✅ [{}] after balance: {:?}",
-                            address,
-                            &balance[..balance.len() - 9]
-                        );
+                    if let Ok(tx) = request_airdrop_result {
+                        println!("\t ✅ Tx: {:?}", tx);
 
                         idx += 1;
                     } else {
-                        println!(
-                            "\t ❌ [{}] request airdrop failed: {}",
-                            address,
-                            request_airdrop_result.err().unwrap()
-                        );
+                        println!("\t ❌ ErrCode: {}", request_airdrop_result.err().unwrap());
                     }
 
                     // save IP ignoring 'requestAirdrop' succes or failed

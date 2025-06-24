@@ -44,13 +44,27 @@ pub async fn get_balance(address: &str) -> reqwest::Result<u64> {
     Ok(balance.result.value)
 }
 
-pub async fn request_airdrop(address: &str) -> reqwest::Result<()> {
+// {"jsonrpc":"2.0","result":"656xc1h8RCCSB9dYzzfRbLbcQNjaTkR9bsEjKxuLqB9NKmKgSUsfB3se4d4KFb7EZ7PAtJQoMiMUpnKvGD16CFLt","id":"0f45e831-7086-4064-9da6-881b001068e5"}
+// {"jsonrpc":"2.0","error":{"code": 429, "message":"You've either reached your airdrop limit today or the airdrop faucet has run dry. Please visit https://faucet.solana.com for alternate sources of test SOL"}, "id": "0f45e831-7086-4064-9da6-881b001068e5" }
+#[derive(Debug, serde::Deserialize)]
+struct RequestAirdrop {
+    pub result: Option<String>,
+    pub error: Option<RequestAirdropError>,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct RequestAirdropError {
+    pub code: u64,
+    // pub message: String,
+}
+
+pub async fn request_airdrop(address: &str) -> anyhow::Result<String> {
     // 不可以复用 Client !!
     let client = reqwest::Client::builder()
         .proxy(reqwest::Proxy::all(crate::api::LOCAL_SOCKS5_PROXY).unwrap())
         .build()
         .unwrap();
-    let r = client
+    let body = client
         .post("https://api.devnet.solana.com")
         .json(&json!(
             {
@@ -64,12 +78,13 @@ pub async fn request_airdrop(address: &str) -> reqwest::Result<()> {
             }
         ))
         .send()
+        .await?
+        .json::<RequestAirdrop>()
         .await?;
-    if r.status() == reqwest::StatusCode::OK {
-        println!("======> {}", r.text().await.unwrap_or(String::new()));
-        Ok(())
+    if let Some(tx) = body.result {
+        Ok(tx)
     } else {
-        Err(r.error_for_status().unwrap_err())
+        Err(anyhow::anyhow!("{:?}", body.error.unwrap().code))
     }
 }
 
@@ -79,22 +94,14 @@ mod tests {
 
     #[tokio::test]
     async fn should_ok() {
-        let solana_api_client = reqwest::Client::builder()
-            .proxy(reqwest::Proxy::all("socks5://127.0.0.1:7890").unwrap())
-            .build()
+        let mut balance = get_balance("BfnPrCHwe5jGa87nriUTkFNUGZFPWHfE8s6eYgMeF8S5")
+            .await
             .unwrap();
-
-        let mut balance = get_balance(
-            &solana_api_client,
-            "BfnPrCHwe5jGa87nriUTkFNUGZFPWHfE8s6eYgMeF8S5",
-        )
-        .await
-        .unwrap();
         println!("{:?}", balance);
-        // request_airdrop(&solana_api_client, "BfnPrCHwe5jGa87nriUTkFNUGZFPWHfE8s6eYgMeF8S5")
+        // request_airdrop("BfnPrCHwe5jGa87nriUTkFNUGZFPWHfE8s6eYgMeF8S5")
         //     .await
         //     .unwrap();
-        // balance = get_balance(&solana_api_client, "BfnPrCHwe5jGa87nriUTkFNUGZFPWHfE8s6eYgMeF8S5")
+        // balance = get_balance("BfnPrCHwe5jGa87nriUTkFNUGZFPWHfE8s6eYgMeF8S5")
         //     .await
         //     .unwrap();
         // println!("{:?}", balance);
