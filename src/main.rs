@@ -39,13 +39,24 @@ const SKIP_PROXIES: [&str; 7] = [
 
 async fn logic() {
     let mut ip_set = HashSet::new();
+    let mut total_sol = 0f64;
 
     let clashx_api_client = reqwest::Client::builder().no_proxy().build().unwrap();
 
-    // get all proxies of GLOBAL proxy group
-    let proxies = api::clashx::group_proxies(&clashx_api_client, api::clashx::PROXY_GROUP_GLOBAL)
+    // 当前 api::clashx::switch_mode_to_global(...) 方法设置的全局模式有问题，需要手动设置为全局模式
+    let mode = api::clashx::get_mode(&clashx_api_client)
         .await
-        .expect("query group proxies");
+        .expect("get mode");
+    if mode.mode != "global" {
+        println!("🙅‍♂️ mode is not global,please switch to global mode manually");
+        return;
+    }
+
+    // get all proxies of GLOBAL proxy group
+    let proxies =
+        api::clashx::get_group_proxies(&clashx_api_client, api::clashx::PROXY_GROUP_GLOBAL)
+            .await
+            .expect("query group proxies");
 
     let mut idx = 0;
     for proxy in proxies.all {
@@ -57,11 +68,7 @@ async fn logic() {
             break;
         }
 
-        println!(
-            "set clashx proxy: {}::{}",
-            api::clashx::PROXY_GROUP_GLOBAL,
-            proxy
-        );
+        println!("set clashx proxy:{}", proxy);
         if let Ok(_) = api::clashx::set_group_proxy(
             &clashx_api_client,
             api::clashx::PROXY_GROUP_GLOBAL,
@@ -81,12 +88,9 @@ async fn logic() {
                 if !ip_set.contains(&ip_info.ip) {
                     let address = ADDRESSES[idx];
                     let balance = api::solana::get_balance(address).await.unwrap_or(0);
-                    println!(
-                        "\t [{}/{}] Balance: {:?}",
-                        idx,
-                        address,
-                        balance as f64 / 1_000_000_000.0
-                    );
+                    let balance = balance as f64 / 1_000_000_000.0;
+                    println!("\t [{}/{}] Balance: {:?}", idx, address, balance,);
+                    total_sol += balance;
 
                     let request_airdrop_result = api::solana::request_airdrop(address).await;
                     if let Ok(tx) = request_airdrop_result {
@@ -103,10 +107,12 @@ async fn logic() {
                     println!("\t ⚠️ IP already used")
                 }
             } else {
-                println!("query ip failed")
+                println!("\t ❌ query ip failed")
             }
         }
     }
+
+    println!("\n🎉 You have {} SOL 🎉", total_sol);
 }
 
 #[tokio::main]
@@ -115,6 +121,6 @@ async fn main() {
 
     // loop {
     //     logic().await;
-    //     tokio::time::sleep(tokio::time::Duration::from_hours(5)).await;
+    //     tokio::time::sleep(tokio::time::Duration::from_hours(3)).await;
     // }
 }
